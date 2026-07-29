@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+backend/venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build outputs
+dashboard/dist/
+dashboard/.vite/
+citizen_app/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads
+backend/uploads/

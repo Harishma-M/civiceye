@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: civiceye_db
+    restart: always
+    environment:
+      POSTGRES_DB: civiceye
+      POSTGRES_USER: civiceye_user
+      POSTGRES_PASSWORD: civiceye_secure_password_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: civiceye_api
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://civiceye_user:civiceye_secure_password_2026@db:5432/civiceye
+      SECRET_KEY: civiceye_super_secret_jwt_key_2026_antigravity_production_grade
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: civiceye_web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
