@@ -1,125 +1,105 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Mock roles for the dashboard
-  const MOCK_USERS = {
-    'admin@civiceye.org': {
-      id: 3,
-      name: "System Administrator",
-      email: "admin@civiceye.org",
-      password: "password123", // Adding mock passwords
-      role: "ADMIN",
-      department: "Central Municipal Governance",
-      badge: "ADM-001",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
-    },
-    'officer@civiceye.org': {
-      id: 1,
-      name: "Inspector K. Arumugam",
-      email: "officer@civiceye.org",
-      password: "password123",
-      role: "OFFICER",
-      department: "Highways Department",
-      badge: "BDG-4402",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-    },
-    'citizen@civiceye.org': {
-      id: 2,
-      name: "Priya Ramesh",
-      email: "citizen@civiceye.org",
-      password: "password123",
-      role: "CITIZEN",
-      department: "Citizen Sentinel",
-      badge: "Civic Champion",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
-    }
-  };
-
-  // Load custom users from localStorage on startup
-  const [customUsers, setCustomUsers] = useState({});
-  
+  // Restore session from token
   useEffect(() => {
-    const saved = localStorage.getItem('civiceye_users');
-    if (saved) {
-      setCustomUsers(JSON.parse(saved));
-    }
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await api.get('/auth/me');
+          setUser(res.data);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error("Token expired or invalid", error);
+          localStorage.removeItem('token');
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
-  const login = (email, password) => {
-    const allUsers = { ...MOCK_USERS, ...customUsers };
-    const userProfile = allUsers[email];
-    
-    if (!userProfile) {
-      throw new Error("Email not found. Please sign up.");
+  const login = async (email, password) => {
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      const data = res.data;
+      
+      localStorage.setItem('token', data.access_token);
+      
+      // Update state
+      setUser({
+        id: data.user_id,
+        name: data.full_name,
+        email: data.email,
+        role: data.role,
+        department: data.role === 'CITIZEN' ? 'Citizen' : 'Officer',
+        badge: data.role === 'ADMIN' ? 'ADM-001' : (data.role === 'OFFICER' ? 'BDG-001' : 'Citizen'),
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+      });
+      setIsAuthenticated(true);
+      return true;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        throw new Error(error.response.data.detail || "Login failed");
+      }
+      throw new Error("Login failed. Check your network connection.");
     }
-    
-    if (userProfile.password !== password) {
-      throw new Error("Invalid password.");
-    }
-    
-    // Don't leak password in state
-    const { password: _, ...safeProfile } = userProfile;
-    setUser(safeProfile);
-    setIsAuthenticated(true);
-    return true;
   };
 
-  const signup = (name, email, password) => {
-    const allUsers = { ...MOCK_USERS, ...customUsers };
-    if (allUsers[email]) {
-      throw new Error("Email already registered. Please sign in.");
+  const signup = async (name, email, password) => {
+    try {
+      // Register
+      await api.post('/auth/register', { 
+        email, 
+        password, 
+        full_name: name,
+        phone: "0000000000" // Placeholder
+      });
+      
+      // Auto login after signup
+      return await login(email, password);
+    } catch (error) {
+      if (error.response && error.response.data) {
+        throw new Error(error.response.data.detail || "Registration failed");
+      }
+      throw new Error("Registration failed.");
     }
-
-    const newProfile = {
-      id: Math.floor(Math.random() * 1000000), // Random high ID so it doesn't conflict
-      name: name,
-      email: email,
-      password: password,
-      role: "CITIZEN",
-      department: "Citizen",
-      badge: "New User",
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
-    };
-
-    const updatedCustomUsers = { ...customUsers, [email]: newProfile };
-    setCustomUsers(updatedCustomUsers);
-    localStorage.setItem('civiceye_users', JSON.stringify(updatedCustomUsers));
-
-    const { password: _, ...safeProfile } = newProfile;
-    setUser(safeProfile);
-    setIsAuthenticated(true);
-    return true;
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
     setIsAuthenticated(false);
   };
 
-  const switchRole = (role) => {
-    if (role === 'ADMIN') {
-      const { password: _, ...safeProfile } = MOCK_USERS['admin@civiceye.org'];
-      setUser(safeProfile);
-    } else if (role === 'OFFICER') {
-      const { password: _, ...safeProfile } = MOCK_USERS['officer@civiceye.org'];
-      setUser(safeProfile);
-    } else {
-      const { password: _, ...safeProfile } = MOCK_USERS['citizen@civiceye.org'];
-      setUser(safeProfile);
+  const switchRole = async (role) => {
+    // For local testing convenience during dev
+    try {
+      if (role === 'ADMIN') {
+        await login('admin@civiceye.org', 'password123');
+      } else if (role === 'OFFICER') {
+        await login('officer@civiceye.org', 'password123');
+      } else {
+        await login('citizen@civiceye.org', 'password123');
+      }
+    } catch (e) {
+      console.warn("Switch role failed - accounts might not be seeded yet.");
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signup, logout, switchRole }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, loading, login, signup, logout, switchRole }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
-

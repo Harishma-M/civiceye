@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
@@ -10,65 +10,69 @@ import { AdminTab } from './components/AdminTab';
 import { AIDiagnosticsTab } from './components/AIDiagnosticsTab';
 import { CitizenAppModal } from './components/CitizenAppModal';
 import { Login } from './components/Login';
-import { MOCK_COMPLAINTS, MOCK_DEPARTMENTS } from './services/mockData';
+import api from './services/api';
 
 const AppContent = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   
   const [activeTab, setActiveTab] = useState('OVERVIEW');
-  const [complaints, setComplaints] = useState(MOCK_COMPLAINTS);
-  const [departments, setDepartments] = useState(MOCK_DEPARTMENTS);
+  const [complaints, setComplaints] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [showCitizenAppModal, setShowCitizenAppModal] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchData = async () => {
+    setDataLoading(true);
+    try {
+      // If citizen, fetch only their complaints, else fetch all
+      const compUrl = user.role === 'CITIZEN' ? `/complaints/?citizen_id=${user.id}` : `/complaints/`;
+      const [compRes, deptRes] = await Promise.all([
+        api.get(compUrl),
+        api.get('/admin/departments')
+      ]);
+      setComplaints(compRes.data);
+      setDepartments(deptRes.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Loading...</div>;
+  }
 
   // If not authenticated, show the Login/Signup page
   if (!isAuthenticated) {
     return <Login />;
   }
 
-  // Isolate data based on user role
-  const visibleComplaints = complaints.filter(c => {
-    if (user.role === 'CITIZEN') {
-      return c.reported_by.id === user.id;
+  const handleAddComplaint = async (newComp) => {
+    try {
+      const res = await api.post('/complaints/', newComp);
+      setComplaints(prev => [res.data, ...prev]);
+    } catch (error) {
+      console.error("Error adding complaint", error);
+      alert("Failed to submit complaint.");
     }
-    // Admin and Officer see all (in a real app, Officer would see department specific)
-    return true;
-  });
-
-  const handleAddComplaint = (newComp) => {
-    // Add the user to the reported_by field
-    const compWithUser = {
-      ...newComp,
-      reported_by: {
-        id: user.id,
-        name: user.name,
-        contact: user.email,
-        trust_score: 95
-      }
-    };
-    setComplaints(prev => [compWithUser, ...prev]);
   };
 
-  const handleUpdateStatus = (id, updateData) => {
-    setComplaints(prev => prev.map(c => {
-      if (c.id === id) {
-        return {
-          ...c,
-          status: updateData.status,
-          field_worker: updateData.field_worker || c.field_worker,
-          after_image_url: updateData.work_image_url || c.after_image_url,
-          history: [
-            ...c.history,
-            {
-              status: updateData.status,
-              timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
-              notes: updateData.notes || `Status updated to ${updateData.status}`,
-              updated_by: 'Officer Portal'
-            }
-          ]
-        };
-      }
-      return c;
-    }));
+  const handleUpdateStatus = async (id, updateData) => {
+    try {
+      const res = await api.put(`/complaints/${id}/status`, updateData);
+      setComplaints(prev => prev.map(c => c.id === id ? res.data : c));
+    } catch (error) {
+      console.error("Error updating status", error);
+      alert("Failed to update status.");
+    }
   };
 
   return (
@@ -79,23 +83,27 @@ const AppContent = () => {
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         
         <main className="flex-1 p-6 overflow-y-auto">
-          {activeTab === 'OVERVIEW' && <OverviewTab complaints={visibleComplaints} departments={departments} />}
-          {activeTab === 'MAP' && (
-            <MapViewTab 
-              complaints={visibleComplaints} 
-              onSelectComplaint={(c) => {
-                setActiveTab('COMPLAINTS');
-              }} 
-            />
+          {dataLoading ? (
+            <div className="flex justify-center items-center h-64 text-slate-500">Loading data...</div>
+          ) : (
+            <>
+              {activeTab === 'OVERVIEW' && <OverviewTab complaints={complaints} departments={departments} />}
+              {activeTab === 'MAP' && (
+                <MapViewTab 
+                  complaints={complaints} 
+                  onSelectComplaint={(c) => setActiveTab('COMPLAINTS')} 
+                />
+              )}
+              {activeTab === 'COMPLAINTS' && (
+                <ComplaintsTab 
+                  complaints={complaints} 
+                  onUpdateStatus={handleUpdateStatus} 
+                />
+              )}
+              {activeTab === 'ADMIN' && <AdminTab departments={departments} />}
+              {activeTab === 'AI_DIAGNOSTICS' && <AIDiagnosticsTab />}
+            </>
           )}
-          {activeTab === 'COMPLAINTS' && (
-            <ComplaintsTab 
-              complaints={visibleComplaints} 
-              onUpdateStatus={handleUpdateStatus} 
-            />
-          )}
-          {activeTab === 'ADMIN' && <AdminTab departments={departments} />}
-          {activeTab === 'AI_DIAGNOSTICS' && <AIDiagnosticsTab />}
         </main>
       </div>
 

@@ -16,8 +16,8 @@ export const Navbar = ({ onOpenCitizenApp }) => {
     <header className="sticky top-0 z-40 w-full glass-card border-b border-slate-200 dark:border-slate-800 px-6 py-3.5 flex items-center justify-between shadow-sm">
       {/* Brand & App Title */}
       <div className="flex items-center space-x-3">
-        <div className="bg-gradient-to-tr from-sky-600 to-indigo-600 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
-          <Eye className="w-6 h-6 animate-pulse" />
+        <div className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center shadow-md border border-slate-200 dark:border-slate-800 bg-white">
+          <img src="/logo.png" className="w-full h-full object-cover" alt="Logo" />
         </div>
         <div>
           <div className="flex items-center space-x-2">

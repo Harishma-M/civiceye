@@ -86,8 +86,8 @@ export const Login = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30">
-            <Shield className="w-10 h-10 text-white" />
+          <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30 overflow-hidden border border-slate-700">
+            <img src="/logo.png" className="w-full h-full object-cover" alt="CivicEye Logo" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight">
@@ -241,7 +241,9 @@ export const Login = () => {
               <p className="text-xs text-sky-300 mb-1 font-semibold">Demo Accounts</p>
               <p className="text-[10px] text-slate-400">Admin: admin@civiceye.org</p>
               <p className="text-[10px] text-slate-400">Officer: officer@civiceye.org</p>
-              <p className="text-[10px] text-slate-400">Any password works for demo</p>
+              <p className="text-[10px] text-slate-400">Citizen: citizen@civiceye.org</p>
+              <p className="text-[10px] text-slate-400 mt-1">Password for all: <b>password123</b></p>
+              <p className="text-[10px] text-slate-400 mt-1">Or sign up for a brand new empty account!</p>
             </div>
           </div>
         </div>
