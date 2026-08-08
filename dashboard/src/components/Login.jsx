@@ -59,16 +59,13 @@ export const Login = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
       if (isLogin) {
-        login(formData.email, formData.password);
+        await login(formData.email, formData.password);
       } else {
-        signup(formData.name, formData.email, formData.password);
+        await signup(formData.name, formData.email, formData.password);
       }
     } catch (err) {
-      setErrors({ form: 'An error occurred during authentication.' });
+      setErrors({ form: err.message || 'An error occurred during authentication.' });
     } finally {
       setIsLoading(false);
     }

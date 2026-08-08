@@ -1,5 +1,9 @@
 {
   "appId": "org.civiceye.app",
   "appName": "CivicEye",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["*"]
+  }
 }

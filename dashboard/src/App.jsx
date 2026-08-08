@@ -57,11 +57,21 @@ const AppContent = () => {
 
   const handleAddComplaint = async (newComp) => {
     try {
-      const res = await api.post('/complaints/', newComp);
+      const payload = {
+        title: newComp.title || "Civic Complaint",
+        description: newComp.description || "",
+        category: newComp.category || "Pothole",
+        latitude: parseFloat(newComp.latitude) || 13.0827,
+        longitude: parseFloat(newComp.longitude) || 80.2707,
+        address: newComp.address || "Detected GPS Location",
+        zone_name: newComp.zone_name || "Zone 1",
+        image_url: newComp.image_url || "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600"
+      };
+      const res = await api.post('/complaints/', payload);
       setComplaints(prev => [res.data, ...prev]);
     } catch (error) {
       console.error("Error adding complaint", error);
-      alert("Failed to submit complaint.");
+      alert("Failed to submit complaint to database.");
     }
   };
 

@@ -1,12 +1,13 @@
 import axios from 'axios';
 
-// Detect if running inside native app (Capacitor)
-const isNative = window.location.origin.includes('capacitor://') || window.location.origin.includes('http://localhost:80');
+// When accessed from phone browser, window.location.hostname is the laptop IP.
+// When on localhost (laptop browser), use the Vite proxy at /api/v1.
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 const api = axios.create({
-  baseURL: isNative 
-    ? 'https://643b75c36186d5.lhr.life/api/v1' // Points to the active public tunnel
-    : '/api/v1',
+  baseURL: isLocalhost
+    ? '/api/v1'
+    : `http://${window.location.hostname}:8000/api/v1`,  // Uses same IP the phone used to load the page
   headers: {
     'Content-Type': 'application/json',
   },
