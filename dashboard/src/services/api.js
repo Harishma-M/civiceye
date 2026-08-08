@@ -1,13 +1,19 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
+
+// Detect if running natively on a mobile device (Android/iOS)
+const isNative = Capacitor.isNativePlatform();
 
 // When accessed from phone browser, window.location.hostname is the laptop IP.
 // When on localhost (laptop browser), use the Vite proxy at /api/v1.
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 const api = axios.create({
-  baseURL: isLocalhost
-    ? '/api/v1'
-    : `http://${window.location.hostname}:8000/api/v1`,  // Uses same IP the phone used to load the page
+  baseURL: isNative
+    ? 'http://10.217.6.81:8000/api/v1' // Hardcoded laptop IP for native app
+    : isLocalhost
+      ? '/api/v1' // Proxy for laptop browser
+      : `http://${window.location.hostname}:8000/api/v1`, // Phone browser
   headers: {
     'Content-Type': 'application/json',
   },
