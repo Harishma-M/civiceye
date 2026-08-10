@@ -54,14 +54,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, password) => {
+  const signup = async (name, email, password, role = 'CITIZEN') => {
     try {
       // Register
       await api.post('/auth/register', { 
         email, 
         password, 
         full_name: name,
-        phone: "0000000000" // Placeholder
+        phone: "0000000000", // Placeholder
+        role: role
       });
       
       // Auto login after signup

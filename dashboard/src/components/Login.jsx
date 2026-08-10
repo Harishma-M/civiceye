@@ -9,7 +9,8 @@ export const Login = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    role: 'CITIZEN'
   });
   
   const [errors, setErrors] = useState({});
@@ -62,7 +63,7 @@ export const Login = () => {
       if (isLogin) {
         await login(formData.email, formData.password);
       } else {
-        await signup(formData.name, formData.email, formData.password);
+        await signup(formData.name, formData.email, formData.password, formData.role);
       }
     } catch (err) {
       setErrors({ form: err.message || 'An error occurred during authentication.' });
@@ -125,6 +126,31 @@ export const Login = () => {
                   />
                 </div>
                 {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name}</p>}
+              </div>
+            )}
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Account Type
+                </label>
+                <div className="relative">
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className="block w-full pl-3 pr-10 py-2.5 border border-slate-600 focus:ring-sky-500 rounded-xl bg-slate-900/50 text-white focus:outline-none focus:ring-2 focus:border-transparent transition-colors appearance-none"
+                  >
+                    <option value="CITIZEN">Citizen (Report Issues)</option>
+                    <option value="OFFICER">Officer (Resolve Issues)</option>
+                    <option value="ADMIN">Admin (Manage Platform)</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                    <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             )}
 
