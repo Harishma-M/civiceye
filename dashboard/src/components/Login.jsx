@@ -259,14 +259,10 @@ export const Login = () => {
               </button>
             </div>
             
-            {/* Quick Demo Login Hint */}
+            {/* Tagline */}
             <div className="mt-6 text-center p-3 rounded-lg bg-sky-900/20 border border-sky-500/20">
-              <p className="text-xs text-sky-300 mb-1 font-semibold">Demo Accounts</p>
-              <p className="text-[10px] text-slate-400">Admin: admin@civiceye.org</p>
-              <p className="text-[10px] text-slate-400">Officer: officer@civiceye.org</p>
-              <p className="text-[10px] text-slate-400">Citizen: citizen@civiceye.org</p>
-              <p className="text-[10px] text-slate-400 mt-1">Password for all: <b>password123</b></p>
-              <p className="text-[10px] text-slate-400 mt-1">Or sign up for a brand new empty account!</p>
+              <p className="text-xs text-sky-300 font-semibold">AI-Powered Public Complaint Management</p>
+              <p className="text-[10px] text-slate-400 mt-1">Sign up with your email to get started. Choose your role during registration.</p>
             </div>
           </div>
         </div>
